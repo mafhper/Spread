@@ -443,12 +443,22 @@ const base = import.meta.env.BASE_URL;
         </div>
     </main>
 
-    <script is:inline define:vars={{ baseUrl: import.meta.env.BASE_URL }}>
-        // Carrega o script spread.js
-        const script = document.createElement('script');
-        const cleanBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
-        script.src = cleanBase + 'spread.js';
-        document.body.appendChild(script);
-    </script>
+<script is:inline define:vars={{ base }}>
+    const cleanBase = base.replace(/\/$/, '');
+    console.log('Base path:', cleanBase);
+
+    // Define base no body para spread.js
+    document.body.dataset.base = cleanBase;
+
+    const script = document.createElement('script');
+    const scriptPath = cleanBase + '/spread.js';
+    console.log('Tentando carregar:', scriptPath);
+    script.src = scriptPath;
+
+    script.onerror = () => console.error('Erro ao carregar spread.js:', scriptPath);
+    script.onload = () => console.log('spread.js carregado com sucesso!');
+
+    document.body.appendChild(script);
+</script>
 </body>
 </html>
