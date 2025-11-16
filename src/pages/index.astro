@@ -1,0 +1,448 @@
+---
+// Página principal do Spread
+import '../styles/global.css';
+---
+
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spread - Crie Visualizações de Links</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    
+    <style id="google-fonts-inline"></style>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .skeleton {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            50% {
+                opacity: .5;
+            }
+        }
+
+        .dark-theme {
+            --bg-color: #121212;
+            --text-color: #f5f5f5;
+            --accent-color: #ec4899;
+            --card-color: #1a1a1a;
+            --border-color: #2a2a2a;
+        }
+        
+        body {
+            position: relative;
+            color: var(--text-color, #111);
+            overflow-x: hidden;
+            background: #0a0a0f;
+        }
+        
+        /* Gradiente base fixo */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -2;
+            background: linear-gradient(135deg, 
+                #0a0a0f 0%, 
+                #12111a 50%, 
+                #0a0a0f 100%);
+        }
+        
+        /* Blobs animados com blur - shimmer suave */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(249, 115, 22, 0.08) 0%, transparent 50%);
+            filter: blur(60px);
+            animation: blobFloat 20s ease-in-out infinite;
+        }
+        
+        @keyframes blobFloat {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.4;
+            }
+            33% {
+                transform: translate(3%, 4%) scale(1.05);
+                opacity: 0.5;
+            }
+            66% {
+                transform: translate(-2%, 5%) scale(0.95);
+                opacity: 0.45;
+            }
+        }
+        
+        .dark body {
+            color: var(--text-color);
+        }
+        
+        /* Shimmer overlay sutil */
+        body {
+            position: relative;
+        }
+        
+        body > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Shimmer suave e lento */
+        @keyframes shimmer {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+        
+        /* Overlay com shimmer suave */
+        main::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(192, 132, 252, 0.02) 50%,
+                transparent 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 15s ease-in-out infinite;
+        }
+        
+        /* Mensagens de status */
+        .message-success {
+            color: #10b981;
+        }
+        
+        .message-error {
+            color: #ef4444;
+        }
+        
+        .message-info {
+            color: #3b82f6;
+        }
+        
+        /* Acessibilidade - Respeitar preferências de movimento */
+        @media (prefers-reduced-motion: reduce) {
+            body::after,
+            main::before {
+                animation: none !important;
+            }
+        }
+
+        .assist-button {
+            background-color: var(--border-color);
+            color: var(--text-color);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid var(--border-color);
+        }
+        .assist-button:hover {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        .assist-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: var(--border-color);
+            color: var(--text-color);
+            border-color: var(--border-color);
+        }
+    </style>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js" is:inline></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js" is:inline></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.6.0/tinycolor.min.js" is:inline></script>
+</head>
+
+<body class="dark-theme bg-bg-primary text-text-primary min-h-screen flex flex-col">
+
+    <header class="sticky top-0 z-50 w-full border-b border-border-primary bg-bg-primary/80 backdrop-blur-md shadow-sm">
+        <div class="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+            <div class="flex items-center gap-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#c084fc;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#f0abfc;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#d8b4fe;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M12 9C10.3431 9 9 7.65685 9 6C9 4.34315 10.3431 3 12 3C13.6569 3 15 4.34315 15 6C15 7.65685 13.6569 9 12 9Z" stroke="url(#logoGradient)" stroke-width="1.5"/>
+                    <path d="M5.5 21C3.84315 21 2.5 19.6569 2.5 18C2.5 16.3431 3.84315 15 5.5 15C7.15685 15 8.5 16.3431 8.5 18C8.5 19.6569 7.15685 21 5.5 21Z" stroke="url(#logoGradient)" stroke-width="1.5"/>
+                    <path d="M18.5 21C16.8431 21 15.5 19.6569 15.5 18C15.5 16.3431 16.8431 15 18.5 15C20.1569 15 21.5 16.3431 21.5 18C21.5 19.6569 20.1569 21 18.5 21Z" stroke="url(#logoGradient)" stroke-width="1.5"/>
+                    <path d="M20 13C20 10.6106 18.9525 8.46589 17.2916 7M4 13C4 10.6106 5.04752 8.46589 6.70838 7M10 20.748C10.6392 20.9125 11.3094 21 12 21C12.6906 21 13.3608 20.9125 14 20.748" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-300 bg-clip-text text-transparent">Spread</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto flex-1 max-w-7xl px-4 py-8 sm:px-6">
+        
+        <div class="flex flex-col-reverse gap-8 lg:flex-row lg:gap-12">
+
+            <div class="w-full lg:w-1/3">
+                
+                <div class="rounded-xl border border-border-primary bg-card-primary p-5 shadow-lg">
+                    <h2 class="text-lg font-semibold text-text-primary">Comece por aqui</h2>
+                    <p class="mt-1 text-sm text-text-primary/70">Cole um link para gerar sua visualização.</p>
+                    
+                    <div class="mt-4 flex gap-2">
+                        <input type="url" id="linkInput" placeholder="https://youtube.com/watch?v=..." class="flex-1 rounded-lg border border-border-primary bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-primary/50 focus:outline-none focus:ring-2 focus:ring-accent/50">
+                        <button id="generateButton" class="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90">
+                            Gerar
+                        </button>
+                    </div>
+                    <p id="errorMessage" class="mt-2 text-sm"></p>
+                </div>
+
+                <div class="mt-6 rounded-xl border border-border-primary bg-card-primary p-5 shadow-lg">
+                    <h2 class="text-lg font-semibold text-text-primary">Customizar</h2>
+                    <p class="mt-1 text-sm text-text-primary/70">Ajuste o visual do seu card.</p>
+                    
+                    <div class="mt-4 space-y-5">
+                        <!-- Cores -->
+                        <div>
+                            <label for="bgColor1" class="block text-sm font-medium text-text-primary/90 mb-2">Cor de Fundo 1</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="color" id="bgColor1" value="#8b5cf6" class="h-11 w-20 cursor-pointer rounded-lg border border-border-primary bg-bg-primary p-1">
+                                <input type="text" id="bgColor1Hex" value="#8b5cf6" placeholder="#000000" maxlength="7" class="flex-1 h-11 rounded-lg border border-border-primary bg-bg-primary px-3 text-sm text-text-primary font-mono uppercase focus:outline-none focus:ring-2 focus:ring-accent/50">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="bgColor2" class="block text-sm font-medium text-text-primary/90 mb-2">Cor de Fundo 2</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="color" id="bgColor2" value="#ec4899" class="h-11 w-20 cursor-pointer rounded-lg border border-border-primary bg-bg-primary p-1">
+                                <input type="text" id="bgColor2Hex" value="#ec4899" placeholder="#FFFFFF" maxlength="7" class="flex-1 h-11 rounded-lg border border-border-primary bg-bg-primary px-3 text-sm text-text-primary font-mono uppercase focus:outline-none focus:ring-2 focus:ring-accent/50">
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 pt-4 border-t border-border-primary">
+                            <label for="gradientStyle" class="block text-sm font-medium text-text-primary/90">Estilo do Gradiente</label>
+                            <select id="gradientStyle" class="w-full rounded-lg border border-border-primary bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/50 hover:border-accent/70">
+                                <option value="135deg">Diagonal (Padrão)</option>
+                                <option value="180deg">Vertical</option>
+                                <option value="90deg">Horizontal</option>
+                                <option value="315deg">Diagonal (Inversa)</option>
+                                <option value="circle at center">Radial (Centro)</option>
+                                <option value="circle at top left">Radial (Canto)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-3 pt-4 border-t border-border-primary">
+                            <label class="block text-sm font-medium text-text-primary/90">🎨 Temas Predefinidos</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="themeSunset" class="assist-button">Sunset</button>
+                                <button id="themeOcean" class="assist-button">Ocean</button>
+                                <button id="themeForest" class="assist-button">Forest</button>
+                                <button id="themeNeon" class="assist-button">Neon</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 pt-4 border-t border-border-primary">
+                            <label class="block text-sm font-medium text-text-primary/90">🔮 Assistente de Cores</label>
+                            <p class="text-xs text-text-primary/60">Gera harmonias com base na cor dominante da imagem.</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="assistAnalogous" class="assist-button" disabled>Analógica</button>
+                                <button id="assistTriad" class="assist-button" disabled>Triádica</button>
+                                <button id="assistSplit" class="assist-button" disabled>Dividida</button>
+                                <button id="assistMono" class="assist-button" disabled>Monocromia</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 pt-4 border-t border-border-primary">
+                            <label for="imageAspect" class="block text-sm font-medium text-text-primary/90">Formato da Imagem</label>
+                            <select id="imageAspect" class="w-full rounded-lg border border-border-primary bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/50 hover:border-accent/70">
+                                <option value="aspect-video">Horizontal (16:9)</option>
+                                <option value="aspect-square">Quadrado (1:1)</option>
+                                <option value="aspect-[9/16]">Vertical (9:16)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label for="imagePosition" class="block text-sm font-medium text-text-primary/90">Posição da Imagem</label>
+                            <select id="imagePosition" class="w-full rounded-lg border border-border-primary bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/50 hover:border-accent/70">
+                                <option value="object-center">Centro (Padrão)</option>
+                                <option value="object-top">Topo</option>
+                                <option value="object-bottom">Fundo</option>
+                                <option value="object-left">Esquerda</option>
+                                <option value="object-right">Direita</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-4 pt-4 border-t border-border-primary">
+                            <h3 class="text-base font-semibold text-text-primary">Ajustes de Layout</h3>
+                            
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <label for="outerRadiusSlider" class="text-sm font-medium text-text-primary/90">Curvatura Externa (Fundo)</label>
+                                    <span id="outerRadiusValue" class="text-sm font-semibold text-accent">0px</span>
+                                </div>
+                                <input type="range" id="outerRadiusSlider" min="0" max="50" value="0" class="w-full">
+                            </div>
+
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <label for="innerRadiusSlider" class="text-sm font-medium text-text-primary/90">Curvatura Interna (Card)</label>
+                                    <span id="innerRadiusValue" class="text-sm font-semibold text-accent">8px</span>
+                                </div>
+                                <input type="range" id="innerRadiusSlider" min="0" max="50" value="8" class="w-full">
+                            </div>
+
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <label for="paddingSlider" class="text-sm font-medium text-text-primary/90">Espaçamento Interno</label>
+                                    <span id="paddingValue" class="text-sm font-semibold text-accent">1.5rem</span>
+                                </div>
+                                <input type="range" id="paddingSlider" min="1" max="10" value="6" class="w-full">
+                            </div>
+
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <label for="opacitySlider" class="text-sm font-medium text-text-primary/90">Opacidade do Card</label>
+                                    <span id="opacityValue" class="text-sm font-semibold text-accent">80%</span>
+                                </div>
+                                <input type="range" id="opacitySlider" min="0" max="100" value="80" class="w-full">
+                            </div>
+
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <label for="fontSizeSlider" class="text-sm font-medium text-text-primary/90">Tamanho da Fonte</label>
+                                    <span id="fontSizeValue" class="text-sm font-semibold text-accent">100%</span>
+                                </div>
+                                <input type="range" id="fontSizeSlider" min="70" max="150" value="100" class="w-full">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-border-primary">
+                            <button id="resetButton" class="w-full rounded-lg bg-border-primary px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-accent/20">
+                                🔄 Resetar Configurações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="w-full lg:w-2/3">
+                <div class="sticky top-24">
+                    <h2 class="text-lg font-semibold text-text-primary lg:text-xl text-center">Preview</h2>
+                    
+                    <div id="previewContainer" class="mt-4 w-full max-w-2xl mx-auto overflow-hidden">
+                        
+                        <div id="skeletonLoader" class="hidden w-full aspect-video rounded-lg border border-border-primary bg-card-primary p-6 shadow-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-8 rounded-full bg-border-primary skeleton"></div>
+                                <div class="h-4 w-1/3 rounded bg-border-primary skeleton"></div>
+                            </div>
+                            <div class="mt-4 h-32 w-full rounded-lg bg-border-primary skeleton"></div>
+                            <div class="mt-3 h-5 w-3/4 rounded bg-border-primary skeleton"></div>
+                            <div class="mt-2 h-4 w-full rounded bg-border-primary skeleton"></div>
+                        </div>
+
+                        <div id="previewCard" class="hidden"> 
+                            
+                            <div id="gradientBackground" class="w-full p-6 shadow-xl transition-all" style="background-image: linear-gradient(135deg, var(--accent-color), var(--bg-color)); border-radius: 0px;">
+                                
+                                <div id="innerCard" class="flex flex-col gap-4 bg-card-primary/80 p-5 backdrop-blur-sm border border-border-primary/50" style="border-radius: 8px;">
+                                    
+                                    <!-- Header fixo com logo Spread -->
+                                    <div class="flex items-center gap-2">
+                                        <img id="previewFavicon" src="/favicon.svg" alt="Spread" class="h-6 w-6 rounded-full border border-border-primary">
+                                        <span class="text-sm font-medium text-text-primary/80">Spread</span>
+                                    </div>
+                                    
+                                    <!-- Imagem -->
+                                    <img id="previewImage" src="" alt="Imagem do Link" class="hidden w-full rounded-lg object-cover aspect-video border border-border-primary">
+                                    
+                                    <!-- Template Padrão -->
+                                    <div id="templateDefault" class="flex flex-col gap-1">
+                                        <h3 id="defaultTitle" class="text-xl font-bold text-text-primary">Bem-vindo ao Spread</h3>
+                                        <p id="defaultDescription" class="text-sm text-text-primary/70">Crie e compartilhe visualizações de links elegantes e modernas, 100% no seu navegador.</p>
+                                    </div>
+
+                                    <!-- Template Música -->
+                                    <div id="templateMusic" class="hidden flex-col gap-2">
+                                        <h3 id="musicTitle" class="text-xl font-bold text-text-primary"></h3>
+                                        <div class="flex items-center gap-2">
+                                            <div id="platformIcon" class="hidden h-5 w-5 flex-shrink-0"></div>
+                                            <p id="musicArtist" class="text-sm text-text-primary/70"></p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Template Notícia -->
+                                    <div id="templateNews" class="hidden flex-col gap-2">
+                                        <h3 id="newsHeadline" class="text-xl font-bold text-text-primary"></h3>
+                                        <p id="newsAuthor" class="text-sm font-medium text-text-primary/80"></p>
+                                        <p id="newsDescription" class="text-sm text-text-primary/70"></p>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <!-- Botões de Ação -->
+                    <div id="downloadSection" class="hidden mt-6 flex flex-col items-center gap-3">
+                        <button id="downloadButton" disabled class="group relative w-full max-w-md overflow-hidden rounded-xl bg-gradient-to-r from-purple-500/80 via-pink-500/80 to-purple-400/80 p-[2px] shadow-lg shadow-purple-500/10 transition-all hover:shadow-xl hover:shadow-purple-500/20 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+                            <div class="flex items-center justify-center gap-3 rounded-[10px] bg-gray-900/90 px-8 py-4 backdrop-blur-sm transition-all group-hover:bg-gray-900/70">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-300 transition-transform group-hover:translate-y-1">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/>
+                                    <line x1="12" x2="12" y1="15" y2="3"/>
+                                </svg>
+                                <span class="text-base font-semibold bg-gradient-to-r from-purple-300 via-pink-300 to-purple-200 bg-clip-text text-transparent">Baixar Imagem</span>
+                            </div>
+                        </button>
+                        
+                        <p id="downloadStatus" class="text-sm text-center min-h-[20px]"></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script is:inline define:vars={{ baseUrl: import.meta.env.BASE_URL }}>
+        // Carrega o script spread.js
+        const script = document.createElement('script');
+        const cleanBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+        script.src = cleanBase + 'spread.js';
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>

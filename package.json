@@ -1,0 +1,39 @@
+{
+  "name": "spread",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Crie visualizações elegantes de links com customização completa",
+  "author": "mafhper",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mafhper/spread.git"
+  },
+  "homepage": "https://mafhper.github.io/spread",
+  "keywords": [
+    "link-preview",
+    "card-generator",
+    "open-graph",
+    "music-card",
+    "astro",
+    "tailwindcss"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.17",
+    "astro": "^5.15.8"
+  },
+  "devDependencies": {
+    "@astrojs/tailwind": "^6.0.2",
+    "tailwindcss": "^4.1.17"
+  }
+}
