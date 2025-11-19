@@ -478,22 +478,97 @@
       showLoading(false);
     }
   
+    // === GOOGLE FONTS LOADING ===
+    async function loadGoogleFonts() {
+        const fontsUrl = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lato:wght@400;700&family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&family=Playfair+Display:wght@400;600&family=Roboto:wght@400;500;700&display=swap";
+        
+        try {
+            const response = await fetch(fontsUrl);
+            if (!response.ok) throw new Error("Failed to load fonts CSS");
+            let css = await response.text();
+            
+            // Parse and replace URLs with Base64 to avoid CORS issues in html-to-image
+            const urlRegex = /url\(([^)]+)\)/g;
+            const matches = [...css.matchAll(urlRegex)];
+            const uniqueUrls = [...new Set(matches.map(m => m[1].replace(/['"]/g, '')))];
+
+            console.log(`Processing ${uniqueUrls.length} font files...`);
+
+            await Promise.all(uniqueUrls.map(async (url) => {
+                try {
+                    const fontResponse = await fetch(url);
+                    const blob = await fontResponse.blob();
+                    const reader = new FileReader();
+                    const base64 = await new Promise((resolve) => {
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(blob);
+                    });
+                    // Replace all occurrences
+                    css = css.replaceAll(url, base64);
+                    css = css.replaceAll(`"${url}"`, `"${base64}"`);
+                    css = css.replaceAll(`'${url}'`, `'${base64}'`);
+                } catch (e) {
+                    console.warn("Failed to embed font:", url, e);
+                }
+            }));
+
+            const style = document.getElementById("google-fonts-inline");
+            if (style) {
+                style.textContent = css;
+                console.log("✅ Google Fonts inlined with Base64");
+            }
+        } catch (error) {
+            console.warn("⚠️ Failed to inline Google Fonts:", error);
+        }
+    }
+  
+    // Call immediately
+    loadGoogleFonts();
+
     // === CONVERSÃO PARA BASE64 ===
     async function toBase64(url) {
       if (!url || url.startsWith("data:")) return url;
       
       const fetchWithProxy = async (targetUrl) => {
+          // Lista de proxies para tentar
+          const proxies = [
+              (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+              (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+          ];
+
+          for (const proxy of proxies) {
+              try {
+                  const proxyUrl = proxy(targetUrl);
+                  const response = await fetch(proxyUrl);
+                  if (!response.ok) throw new Error("Proxy failed");
+                  
+                  // Validate Content-Type
+                  const contentType = response.headers.get("content-type");
+                  if (contentType && !contentType.startsWith("image/")) {
+                      console.warn(`⚠️ URL returned ${contentType} instead of image: ${targetUrl}`);
+                      throw new Error("Invalid content type");
+                  }
+
+                  return await response.blob();
+              } catch (e) {
+                  console.warn(`Proxy attempt failed:`, e);
+                  continue;
+              }
+          }
+          
+          // Se todos falharem, tenta direto (pode funcionar se o servidor permitir CORS)
           try {
-              // Tenta primeiro via proxy para evitar CORS
-              const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-              const response = await fetch(proxyUrl);
-              if (!response.ok) throw new Error("Proxy failed");
-              return await response.blob();
+            const response = await fetch(targetUrl, { mode: "cors" });
+            if (!response.ok) throw new Error("Direct fetch failed");
+            
+            const contentType = response.headers.get("content-type");
+            if (contentType && !contentType.startsWith("image/")) {
+                 throw new Error("Invalid content type");
+            }
+            
+            return await response.blob();
           } catch (e) {
-              // Fallback para fetch direto (pode falhar por CORS)
-              const response = await fetch(targetUrl, { mode: "cors" });
-              if (!response.ok) throw new Error("Direct fetch failed");
-              return await response.blob();
+            throw new Error("All fetch attempts failed");
           }
       };
 
@@ -799,6 +874,15 @@
             const dataUrl = await htmlToImage.toPng(gradientBackground, {
                 quality: 1.0,
                 pixelRatio: scale,
+                skipAutoScale: true,
+                cacheBust: true,
+                filter: (node) => {
+                    // Exclude hidden elements to avoid errors with broken images that are hidden
+                    if (node.classList && node.classList.contains("hidden")) {
+                        return false;
+                    }
+                    return true;
+                },
                 style: { transform: "scale(1)" } // Ensure no transform issues
             });
             
@@ -809,7 +893,11 @@
             
             showDownloadStatus("Download iniciado!", "success");
         } catch (err) {
-            console.error(err);
+            console.error("❌ Erro ao gerar imagem:", err);
+            if (err instanceof Event) {
+                console.error("Event type:", err.type);
+                console.error("Event target:", err.target);
+            }
             showDownloadStatus("Erro ao gerar imagem.", "error");
         } finally {
             downloadButton.disabled = false;
