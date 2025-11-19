@@ -730,7 +730,7 @@ const base = import.meta.env.BASE_URL;
 
             <!-- Center: Preview Canvas -->
             <div
-                class="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-y-auto bg-[radial-gradient(circle_at_center,_var(--bg-card)_1px,_transparent_1px)] bg-[length:24px_24px]"
+                class="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-hidden bg-[radial-gradient(circle_at_center,_var(--bg-card)_1px,_transparent_1px)] bg-[length:24px_24px]"
             >
                 <div
                     id="previewContainer"
@@ -869,7 +869,9 @@ const base = import.meta.env.BASE_URL;
                                             class="text-xl font-bold leading-snug font-serif"
                                         >
                                         </h2>
-                                        <div class="flex items-center gap-2">
+                                        <div
+                                            class="flex items-center gap-2 mb-1"
+                                        >
                                             <!-- Source Icon for News -->
                                             <img
                                                 id="newsSourceIcon"
@@ -878,7 +880,7 @@ const base = import.meta.env.BASE_URL;
                                             />
                                             <p
                                                 id="newsAuthor"
-                                                class="text-xs font-bold uppercase tracking-widest text-white/60"
+                                                class="text-xs font-bold uppercase tracking-widest text-white/60 whitespace-nowrap truncate"
                                             >
                                             </p>
                                         </div>

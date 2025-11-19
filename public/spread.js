@@ -247,10 +247,40 @@
       previewImage.classList.add(aspect, position, fit);
       
       // Apply scale via transform
+      // Apply scale via transform
       previewImage.style.transform = `scale(${scale})`;
       
       if(imageScaleValue) imageScaleValue.textContent = Math.round(scale * 100) + "%";
+
+      // Fit card to screen
+      fitCardToScreen();
     }
+
+    function fitCardToScreen() {
+        const container = previewContainer.parentElement;
+        const card = previewCard;
+        
+        // Reset scale to get natural dimensions
+        card.style.transform = 'none';
+        
+        const containerRect = container.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        
+        const padding = 40;
+        const availableHeight = containerRect.height - padding;
+        const availableWidth = containerRect.width - padding;
+        
+        const scaleH = availableHeight / cardRect.height;
+        const scaleW = availableWidth / cardRect.width;
+        
+        let scale = Math.min(scaleH, scaleW);
+        if (scale > 1) scale = 1; // Don't scale up
+        
+        card.style.transform = `scale(${scale})`;
+        card.style.transformOrigin = 'center center';
+    }
+
+    window.addEventListener('resize', fitCardToScreen);
   
     function updateBorderRadius() {
       const outer = outerRadiusSlider.value + "px";
@@ -795,6 +825,10 @@
     updateImageStyle();
     updateBorderRadius();
     updatePadding();
+    updatePadding();
     updateOpacity();
+    
+    // Initial fit
+    setTimeout(fitCardToScreen, 100);
 
 })();
