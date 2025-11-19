@@ -586,14 +586,28 @@
       }
     }
   
-    // === FETCH YOUTUBE MUSIC DATA ===
-    async function fetchYouTubeMusicData(url) {
+    // === FETCH YOUTUBE DATA ===
+    async function fetchYouTubeData(url) {
       try {
+        let videoId = null;
+        
+        // Tenta extrair ID de diferentes formatos de URL
         const urlObj = new URL(url);
-        const videoId = urlObj.searchParams.get("v");
+        
+        if (urlObj.hostname === "youtu.be") {
+            videoId = urlObj.pathname.slice(1);
+        } else if (urlObj.searchParams.has("v")) {
+            videoId = urlObj.searchParams.get("v");
+        }
+
         if (!videoId) throw new Error("ID do vídeo não encontrado");
+        
+        // Remove parâmetros extras do ID se houver
+        videoId = videoId.split('&')[0].split('?')[0];
+
         const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
         const response = await fetch(oembedUrl);
+        
         if (!response.ok) throw new Error("Falha ao buscar dados do YouTube");
         const data = await response.json();
         
@@ -609,7 +623,7 @@
           thumbnail: data.thumbnail_url,
         };
       } catch (error) {
-        console.warn("⚠️ Não foi possível buscar dados do YouTube Music:", error);
+        console.warn("⚠️ Não foi possível buscar dados do YouTube:", error);
         return null;
       }
     }
@@ -634,9 +648,10 @@
   
       try {
         let youtubeData = null;
-        const isYouTubeMusic = url.includes("music.youtube.com");
-        if (isYouTubeMusic) {
-          youtubeData = await fetchYouTubeMusicData(url);
+        const isYouTube = url.includes("youtube.com") || url.includes("youtu.be");
+        
+        if (isYouTube) {
+          youtubeData = await fetchYouTubeData(url);
         }
         let linkData = null;
         try {
@@ -644,14 +659,14 @@
           const response = await fetch(apiUrl);
           if (!response.ok) throw new Error("API Error");
           const result = await response.json();
-          linkData = await processMicrolinkData(result.data, url, youtubeData, isYouTubeMusic);
+          linkData = await processMicrolinkData(result.data, url, youtubeData, isYouTube);
         } catch (microlinkError) {
           try {
             const jsonlinkUrl = `https://jsonlink.io/api/extract?url=${encodeURIComponent(url)}`;
             const response = await fetch(jsonlinkUrl);
             if (response.ok) {
                 const result = await response.json();
-                linkData = await processJsonLinkData(result, url, youtubeData, isYouTubeMusic);
+                linkData = await processJsonLinkData(result, url, youtubeData, isYouTube);
             } else {
                 throw new Error("JSONLink Error");
             }
@@ -659,7 +674,7 @@
              if (youtubeData) {
                 linkData = {
                     title: youtubeData.title,
-                    description: "YouTube Music",
+                    description: "YouTube",
                     image: youtubeData.thumbnail ? await toBase64(youtubeData.thumbnail) : "",
                     favicon: fallbackFaviconSrc,
                     domain: new URL(url).hostname,
@@ -688,7 +703,7 @@
     }
   
     // === PROCESSADORES DE DADOS ===
-    async function processMicrolinkData(d, url, youtubeData, isYouTubeMusic) {
+    async function processMicrolinkData(d, url, youtubeData, isYouTube) {
       let title = d.title || "Sem título";
       let author = d.author_name || d.author || null;
       let imageUrl = d.image?.url || d.screenshot?.url;
@@ -699,7 +714,7 @@
         if (youtubeData.thumbnail) imageUrl = youtubeData.thumbnail;
       }
       
-      // Clean author if not YouTube Music (just in case)
+      // Clean author if not YouTube (just in case)
       if (author && typeof author === 'string') {
           author = author.replace(/ - Topic$/, "");
       }
@@ -708,15 +723,15 @@
       
       // Get favicon for the source icon (not the header)
       let favicon = "";
-      if (!isYouTubeMusic && d.logo?.url) {
+      if (!isYouTube && d.logo?.url) {
           const fav = await toBase64(d.logo.url);
           if(fav) favicon = fav;
       }
       
       let template = "default";
-      if (isYouTubeMusic || url.includes("spotify") || url.includes("bandcamp") || url.includes("soundcloud")) {
+      if (isYouTube || url.includes("spotify") || url.includes("bandcamp") || url.includes("soundcloud")) {
         template = "music";
-        if (isYouTubeMusic && title.includes("-")) {
+        if (isYouTube && title.includes("-")) {
              const parts = title.split("-");
              if (parts.length >= 2) {
                  author = parts[0].trim();
@@ -729,7 +744,7 @@
       return { title, description: d.description || "", image, favicon, domain: new URL(url).hostname, author, url, template };
     }
 
-    async function processJsonLinkData(d, url, youtubeData, isYouTubeMusic) {
+    async function processJsonLinkData(d, url, youtubeData, isYouTube) {
         let title = d.title || "Sem título";
         let author = d.author || null;
         let imageUrl = d.images?.[0] || d.image;
@@ -747,12 +762,12 @@
         
         // Get favicon for the source icon
         let favicon = "";
-        if (!isYouTubeMusic && d.favicon) {
+        if (!isYouTube && d.favicon) {
             const fav = await toBase64(d.favicon);
             if(fav) favicon = fav;
         }
         let template = "default";
-        if (isYouTubeMusic || url.includes("spotify") || url.includes("bandcamp") || url.includes("soundcloud")) {
+        if (isYouTube || url.includes("spotify") || url.includes("bandcamp") || url.includes("soundcloud")) {
           template = "music";
         } else if (author) {
           template = "news";
