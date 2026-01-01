@@ -24,3 +24,5 @@ pnpm-debug.log*
 
 # documentation (internal use only)
 docs/
+/_desenvolvimento
+/_dev
