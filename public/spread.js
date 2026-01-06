@@ -43,6 +43,7 @@
     const bgColor1Hex = document.getElementById("bgColor1Hex");
     const bgColor2Hex = document.getElementById("bgColor2Hex");
     const gradientStyle = document.getElementById("gradientStyle");
+    const invertColorsBtn = document.getElementById("invertColorsBtn");
     
     // Controls - Background
     const patternSelector = document.getElementById("patternSelector");
@@ -51,8 +52,17 @@
     
     // Controls - Typography
     const fontSelector = document.getElementById("fontSelector");
-    const fontSizeSlider = document.getElementById("fontSizeSlider");
-    const fontSizeValue = document.getElementById("fontSizeValue");
+    const alignLeft = document.getElementById("alignLeft");
+    const alignCenter = document.getElementById("alignCenter");
+    const alignRight = document.getElementById("alignRight");
+    const titleSizeSlider = document.getElementById("titleSizeSlider");
+    const titleSizeValue = document.getElementById("titleSizeValue");
+    const subtitleSizeSlider = document.getElementById("subtitleSizeSlider");
+    const subtitleSizeValue = document.getElementById("subtitleSizeValue");
+    const textColor = document.getElementById("textColor");
+    const textColorHex = document.getElementById("textColorHex");
+    const editableTitle = document.getElementById("editableTitle");
+    const editableDescription = document.getElementById("editableDescription");
     
     // Controls - Layout
     const imageAspect = document.getElementById("imageAspect");
@@ -84,7 +94,13 @@
         forest: document.getElementById("themeForest"),
         midnight: document.getElementById("themeMidnight"),
         berry: document.getElementById("themeBerry"),
-        ocean: document.getElementById("themeOcean")
+        ocean: document.getElementById("themeOcean"),
+        aurora: document.getElementById("themeAurora"),
+        lavender: document.getElementById("themeLavender"),
+        coffee: document.getElementById("themeCoffee"),
+        mint: document.getElementById("themeMint"),
+        coral: document.getElementById("themeCoral"),
+        monochrome: document.getElementById("themeMonochrome")
     };
 
     const autoThemeBtn = document.getElementById("autoThemeBtn");
@@ -99,8 +115,10 @@
       defaultTitle: document.getElementById("defaultTitle"),
       defaultDescription: document.getElementById("defaultDescription"),
       musicTitle: document.getElementById("musicTitle"),
+      musicSubtitleContainer: document.getElementById("musicSubtitleContainer"),
       musicArtist: document.getElementById("musicArtist"),
       newsHeadline: document.getElementById("newsHeadline"),
+      newsSubtitleContainer: document.getElementById("newsSubtitleContainer"),
       newsAuthor: document.getElementById("newsAuthor"),
       newsDescription: document.getElementById("newsDescription"),
       newsSourceIcon: document.getElementById("newsSourceIcon"), // New element
@@ -304,29 +322,96 @@
       opacityValue.textContent = opacitySlider.value + "%";
     }
   
-    function updateFontSize() {
-      const scale = fontSizeSlider.value / 100;
-      const titles = [
-        templateData.defaultTitle,
-        templateData.musicTitle,
-        templateData.newsHeadline,
-      ];
-      const descriptions = [
-        templateData.defaultDescription,
-        templateData.musicArtist,
-        templateData.newsAuthor,
-        templateData.newsDescription,
-      ];
-  
-      titles.forEach((el) => {
-        if (el) el.style.fontSize = `${1.5 * scale}rem`;
-      });
-  
-      descriptions.forEach((el) => {
-        if (el) el.style.fontSize = `${0.875 * scale}rem`;
-      });
-  
-      fontSizeValue.textContent = fontSizeSlider.value + "%";
+    function updateTitleSize() {
+        const scale = titleSizeSlider.value / 100;
+        const titles = [
+            templateData.defaultTitle,
+            templateData.musicTitle,
+            templateData.newsHeadline,
+        ];
+        
+        titles.forEach((el) => {
+            if (el) el.style.fontSize = `${1.5 * scale}rem`;
+        });
+        
+        titleSizeValue.textContent = titleSizeSlider.value + "%";
+    }
+    
+    function updateSubtitleSize() {
+        const scale = subtitleSizeSlider.value / 100;
+        const descriptions = [
+            templateData.defaultDescription,
+            templateData.musicArtist,
+            templateData.newsAuthor,
+            templateData.newsDescription,
+        ];
+        
+        descriptions.forEach((el) => {
+            if (el) el.style.fontSize = `${0.875 * scale}rem`;
+        });
+        
+        subtitleSizeValue.textContent = subtitleSizeSlider.value + "%";
+    }
+    
+    function updateTextAlignment(align) {
+        const elements = [
+            templateData.defaultTitle, templateData.defaultDescription,
+            templateData.musicTitle, templateData.musicArtist,
+            templateData.newsHeadline, templateData.newsAuthor, templateData.newsDescription
+        ];
+        elements.forEach(el => {
+            if (el) el.style.textAlign = align;
+        });
+        
+        // Handle flex containers for subtitles
+        const flexContainers = [
+            templateData.musicSubtitleContainer, 
+            templateData.newsSubtitleContainer
+        ];
+        
+        let justify = 'flex-start';
+        if (align === 'center') justify = 'center';
+        if (align === 'right') justify = 'flex-end';
+        
+        flexContainers.forEach(el => {
+            if (el) el.style.justifyContent = justify;
+        });
+        
+        // Update button styles
+        [alignLeft, alignCenter, alignRight].forEach(btn => {
+            if (btn) btn.classList.remove('border-[var(--accent-primary)]');
+        });
+        if (align === 'left' && alignLeft) alignLeft.classList.add('border-[var(--accent-primary)]');
+        if (align === 'center' && alignCenter) alignCenter.classList.add('border-[var(--accent-primary)]');
+        if (align === 'right' && alignRight) alignRight.classList.add('border-[var(--accent-primary)]');
+    }
+    
+    function updateTextColor() {
+        const color = textColor.value;
+        const elements = [
+            templateData.defaultTitle, templateData.defaultDescription,
+            templateData.musicTitle, templateData.musicArtist,
+            templateData.newsHeadline, templateData.newsAuthor, templateData.newsDescription,
+            previewDomain
+        ];
+        elements.forEach(el => {
+            if (el) el.style.color = color;
+        });
+        textColorHex.value = color.toUpperCase();
+    }
+    
+    function syncEditableTitle() {
+        const val = editableTitle.value;
+        if (templateData.defaultTitle) templateData.defaultTitle.textContent = val;
+        if (templateData.musicTitle) templateData.musicTitle.textContent = val;
+        if (templateData.newsHeadline) templateData.newsHeadline.textContent = val;
+    }
+    
+    function syncEditableDescription() {
+        const val = editableDescription.value;
+        if (templateData.defaultDescription) templateData.defaultDescription.textContent = val;
+        if (templateData.musicArtist) templateData.musicArtist.textContent = val;
+        if (templateData.newsDescription) templateData.newsDescription.textContent = val;
     }
   
     // === THEME ASSISTANT ===
@@ -370,6 +455,36 @@
             case 'ocean':
                 bgColor1.value = "#0284c7"; // Sky 600
                 bgColor2.value = "#1e3a8a"; // Blue 900
+                gradientStyle.value = "180deg";
+                break;
+            case 'aurora':
+                bgColor1.value = "#2dd4bf"; // Teal 400
+                bgColor2.value = "#a855f7"; // Purple 500
+                gradientStyle.value = "135deg";
+                break;
+            case 'lavender':
+                bgColor1.value = "#c4b5fd"; // Violet 300
+                bgColor2.value = "#c084fc"; // Purple 400
+                gradientStyle.value = "45deg";
+                break;
+            case 'coffee':
+                bgColor1.value = "#78350f"; // Amber 900
+                bgColor2.value = "#a16207"; // Yellow 800
+                gradientStyle.value = "135deg";
+                break;
+            case 'mint':
+                bgColor1.value = "#6ee7b7"; // Emerald 300
+                bgColor2.value = "#2dd4bf"; // Teal 400
+                gradientStyle.value = "45deg";
+                break;
+            case 'coral':
+                bgColor1.value = "#f87171"; // Red 400
+                bgColor2.value = "#fdba74"; // Orange 300
+                gradientStyle.value = "135deg";
+                break;
+            case 'monochrome':
+                bgColor1.value = "#1f2937"; // Gray 800
+                bgColor2.value = "#6b7280"; // Gray 500
                 gradientStyle.value = "180deg";
                 break;
         }
@@ -476,11 +591,15 @@
   
       updateImageStyle();
       showLoading(false);
+      
+      // Populate editable fields
+      if (editableTitle) editableTitle.value = data.title || '';
+      if (editableDescription) editableDescription.value = data.description || data.author || '';
     }
   
     // === GOOGLE FONTS LOADING ===
     async function loadGoogleFonts() {
-        const fontsUrl = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lato:wght@400;700&family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&family=Playfair+Display:wght@400;600&family=Roboto:wght@400;500;700&display=swap";
+        const fontsUrl = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lato:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;600;700&family=Nunito:wght@400;600;700&family=Open+Sans:wght@400;600&family=Oswald:wght@400;500;600&family=Playfair+Display:wght@400;600&family=Poppins:wght@400;500;600;700&family=Raleway:wght@400;500;600&family=Roboto:wght@400;500;700&family=Source+Sans+3:wght@400;600&display=swap";
         
         try {
             const response = await fetch(fontsUrl);
@@ -493,37 +612,106 @@
             const uniqueUrls = [...new Set(matches.map(m => m[1].replace(/['"]/g, '')))];
 
             console.log(`Processing ${uniqueUrls.length} font files...`);
-
-            await Promise.all(uniqueUrls.map(async (url) => {
+            
+            let successfulFonts = 0;
+            
+            // Create an array of promises
+            const fontPromises = uniqueUrls.map(async (url) => {
                 try {
                     const fontResponse = await fetch(url);
+                    if (!fontResponse.ok) throw new Error(`HTTP ${fontResponse.status}`);
                     const blob = await fontResponse.blob();
-                    const reader = new FileReader();
-                    const base64 = await new Promise((resolve) => {
-                        reader.onloadend = () => resolve(reader.result);
+                    
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                             // Replace all occurrences of this specific URL in the CSS
+                             // We don't modify 'css' directly here to avoid race conditions, 
+                             // instead we return the replacement pair
+                             resolve({ url, base64: reader.result });
+                        };
+                        reader.onerror = reject;
                         reader.readAsDataURL(blob);
                     });
-                    // Replace all occurrences
+                } catch (e) {
+                    console.warn("Failed to fetch/convert font:", url, e.message);
+                    return null;
+                }
+            });
+
+            const results = await Promise.allSettled(fontPromises);
+            
+            // Apply replacements sequentially
+            results.forEach(result => {
+                if (result.status === 'fulfilled' && result.value) {
+                    const { url, base64 } = result.value;
                     css = css.replaceAll(url, base64);
                     css = css.replaceAll(`"${url}"`, `"${base64}"`);
                     css = css.replaceAll(`'${url}'`, `'${base64}'`);
-                } catch (e) {
-                    console.warn("Failed to embed font:", url, e);
+                    successfulFonts++;
                 }
-            }));
+            });
 
-            const style = document.getElementById("google-fonts-inline");
-            if (style) {
-                style.textContent = css;
-                console.log("✅ Google Fonts inlined with Base64");
+            console.log(`Stubbed ${successfulFonts}/${uniqueUrls.length} fonts.`);
+
+            // Get or create the style element for inlined fonts
+            let style = document.getElementById("google-fonts-inline");
+            if (!style) {
+                style = document.createElement("style");
+                style.id = "google-fonts-inline";
+                document.head.appendChild(style);
+                console.log("Created google-fonts-inline style element");
             }
+            
+            style.textContent = css;
+            window.generatedFontCss = css; // Store globally for export
+            
+            // Extract and store font family names for verification
+            const fontFamilyMatches = css.match(/font-family:\s*['"]?([^'"\n;]+)['"]?/gi) || [];
+            window.registeredFontFamilies = [...new Set(
+                fontFamilyMatches.map(m => m.replace(/font-family:\s*['"]?/i, '').replace(/['"]?$/, '').trim())
+            )];
+            console.log("Registered font families:", window.registeredFontFamilies);
+            
+            // Remove the remote link to prevent html-to-image from failing on it
+            const remoteLink = document.getElementById("google-fonts-link");
+            if (remoteLink) remoteLink.remove();
+            
+            console.log("✅ Google Fonts inlined with Base64");
         } catch (error) {
             console.warn("⚠️ Failed to inline Google Fonts:", error);
         }
     }
   
-    // Call immediately
+    // Call immediately but don't block
     loadGoogleFonts();
+
+    // === FONT LOADING VERIFICATION ===
+    async function ensureFontsLoaded() {
+        if (!window.registeredFontFamilies || window.registeredFontFamilies.length === 0) {
+            console.log("No registered font families to wait for");
+            return;
+        }
+        
+        console.log("Waiting for fonts to load:", window.registeredFontFamilies);
+        
+        if (document.fonts) {
+            const loadPromises = window.registeredFontFamilies.map(async (fontFamily) => {
+                try {
+                    await document.fonts.load(`400 16px "${fontFamily}"`);
+                    console.log(`Font ${fontFamily} loaded`);
+                } catch (e) {
+                    console.warn(`Could not verify font loading for ${fontFamily}:`, e);
+                }
+            });
+            await Promise.all(loadPromises);
+        } else {
+            // Fallback: wait a bit for the fonts to potentially load
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
+        console.log("✅ All fonts should be loaded");
+    }
 
     // === CONVERSÃO PARA BASE64 ===
     async function toBase64(url) {
@@ -809,7 +997,23 @@
             updateGradient();
         }
         isUpdatingFromHex = false;
+        isUpdatingFromHex = false;
     });
+
+    if (invertColorsBtn) {
+        invertColorsBtn.addEventListener("click", () => {
+            const color1 = bgColor1.value;
+            const color2 = bgColor2.value;
+            
+            // Swap values
+            bgColor1.value = color2;
+            bgColor2.value = color1;
+            bgColor1Hex.value = color2.toUpperCase();
+            bgColor2Hex.value = color1.toUpperCase();
+            
+            updateGradient();
+        });
+    }
 
     // Background Controls
     patternSelector.addEventListener("change", updatePattern);
@@ -818,7 +1022,20 @@
 
     // Typography
     fontSelector.addEventListener("change", updateFont);
-    fontSizeSlider.addEventListener("input", updateFontSize);
+    if (alignLeft) alignLeft.addEventListener("click", () => updateTextAlignment('left'));
+    if (alignCenter) alignCenter.addEventListener("click", () => updateTextAlignment('center'));
+    if (alignRight) alignRight.addEventListener("click", () => updateTextAlignment('right'));
+    if (titleSizeSlider) titleSizeSlider.addEventListener("input", updateTitleSize);
+    if (subtitleSizeSlider) subtitleSizeSlider.addEventListener("input", updateSubtitleSize);
+    if (textColor) textColor.addEventListener("input", updateTextColor);
+    if (textColorHex) textColorHex.addEventListener("input", (e) => {
+        if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+            textColor.value = e.target.value;
+            updateTextColor();
+        }
+    });
+    if (editableTitle) editableTitle.addEventListener("input", syncEditableTitle);
+    if (editableDescription) editableDescription.addEventListener("input", syncEditableDescription);
 
     // Layout
     imageAspect.addEventListener("change", updateImageStyle);
@@ -885,22 +1102,52 @@
         showDownloadStatus("Gerando imagem...", "info");
         
         try {
+            // Ensure fonts are loaded before proceeding
+            await ensureFontsLoaded();
+            
+            // Inject font styles directly into the capture target BEFORE calling toPng
+            let injectedStyle = null;
+            if (window.generatedFontCss) {
+                injectedStyle = document.createElement("style");
+                injectedStyle.id = "export-font-styles";
+                injectedStyle.textContent = window.generatedFontCss;
+                gradientBackground.prepend(injectedStyle);
+                console.log("✅ Fonts injected into DOM for export");
+                
+                // Wait for browser to process the injected styles
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
             const scale = parseInt(exportSize.value) || 2;
             const dataUrl = await htmlToImage.toPng(gradientBackground, {
                 quality: 1.0,
                 pixelRatio: scale,
                 skipAutoScale: true,
+                skipFonts: true, // Bypass internal font embedding (avoiding CORS/SecurityError)
                 cacheBust: true,
                 filter: (node) => {
-                    // Exclude hidden elements to avoid errors with broken images that are hidden
+                    // Exclude hidden elements
                     if (node.classList && node.classList.contains("hidden")) {
+                        return false;
+                    }
+                    // Exclude the remote Google Fonts link which causes CORS/Security errors
+                    if (node.id === 'google-fonts-link') {
                         return false;
                     }
                     return true;
                 },
-                style: { transform: "scale(1)" } // Ensure no transform issues
+                style: { 
+                    transform: "scale(1)",
+                    "font-smooth": "always",
+                    "-webkit-font-smoothing": "antialiased"
+                }
             });
             
+            // Clean up injected style
+            if (injectedStyle) {
+                injectedStyle.remove();
+            }
+
             const link = document.createElement("a");
             link.download = `spread-${currentLinkData.domain}-${Date.now()}.png`;
             link.href = dataUrl;
@@ -924,10 +1171,10 @@
     updateGradient();
     updatePattern();
     updateFont();
-    updateFontSize();
+    updateTitleSize();
+    updateSubtitleSize();
     updateImageStyle();
     updateBorderRadius();
-    updatePadding();
     updatePadding();
     updateOpacity();
     
