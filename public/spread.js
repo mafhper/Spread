@@ -71,6 +71,12 @@
     const imageScaleSlider = document.getElementById("imageScaleSlider");
     const imageScaleValue = document.getElementById("imageScaleValue");
 
+    // Controls - Presets
+    const presetStory = document.getElementById("presetStory");
+    const presetPortrait = document.getElementById("presetPortrait");
+    const presetPost = document.getElementById("presetPost");
+    const presetSquare = document.getElementById("presetSquare");
+
     const outerRadiusSlider = document.getElementById("outerRadiusSlider");
     const outerRadiusValue = document.getElementById("outerRadiusValue");
     const innerRadiusSlider = document.getElementById("innerRadiusSlider");
@@ -1043,6 +1049,40 @@
     imageFit.addEventListener("change", updateImageStyle);
     imageScaleSlider.addEventListener("input", updateImageStyle);
     
+    if (presetStory) presetStory.addEventListener("click", () => {
+        imageAspect.value = "aspect-[9/16]";
+        updateImageStyle();
+    });
+    if (presetPortrait) presetPortrait.addEventListener("click", () => {
+        imageAspect.value = "aspect-[4/5]";
+        updateImageStyle();
+    });
+    if (presetPost) presetPost.addEventListener("click", () => {
+        imageAspect.value = "aspect-video";
+        updateImageStyle();
+    });
+    if (presetSquare) presetSquare.addEventListener("click", () => {
+        imageAspect.value = "aspect-square";
+        updateImageStyle();
+    });
+    
+    if (presetStory) presetStory.addEventListener("click", () => {
+        imageAspect.value = "aspect-[9/16]";
+        updateImageStyle();
+    });
+    if (presetPortrait) presetPortrait.addEventListener("click", () => {
+        imageAspect.value = "aspect-[4/5]";
+        updateImageStyle();
+    });
+    if (presetPost) presetPost.addEventListener("click", () => {
+        imageAspect.value = "aspect-video";
+        updateImageStyle();
+    });
+    if (presetSquare) presetSquare.addEventListener("click", () => {
+        imageAspect.value = "aspect-square";
+        updateImageStyle();
+    });
+    
     outerRadiusSlider.addEventListener("input", updateBorderRadius);
     innerRadiusSlider.addEventListener("input", updateBorderRadius);
     paddingSlider.addEventListener("input", updatePadding);
@@ -1140,6 +1180,17 @@
                     transform: "scale(1)",
                     "font-smooth": "always",
                     "-webkit-font-smoothing": "antialiased"
+                },
+                onClone: (clonedNode) => {
+                    // Force backdrop-filter on the innerCard in the clone
+                    const originalInner = document.getElementById("innerCard");
+                    const clonedInner = clonedNode.querySelector("#innerCard");
+                    if (originalInner && clonedInner) {
+                        clonedInner.style.backdropFilter = originalInner.style.backdropFilter;
+                        clonedInner.style.webkitBackdropFilter = originalInner.style.webkitBackdropFilter;
+                        // Also ensure background color has alpha
+                        clonedInner.style.backgroundColor = originalInner.style.backgroundColor;
+                    }
                 }
             });
             
@@ -1167,7 +1218,132 @@
         }
     });
 
+    // === IMAGE DRAG & DROP ===
+    function initDragAndDrop() {
+        console.log("🖱️ Inicializando Drag & Drop...");
+        if (!previewImage) {
+            console.error("❌ previewImage não encontrado!");
+            return;
+        }
+
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let startPosX = 50;
+        let startPosY = 50;
+
+        function getObjectPosition(element) {
+            try {
+                const style = window.getComputedStyle(element).objectPosition;
+                console.log("📍 Initial Position (Computed):", style);
+                
+                const parts = style.split(" ");
+                let x = 50;
+                let y = 50;
+                
+                // Handle pixel values (convert roughly or fallback)
+                // If browser returns pixels, it implies a fixed size context, which is tricky.
+                // But for object-cover, percentages are standard.
+                
+                if (parts.length >= 1) {
+                    if (parts[0].includes('%')) x = parseFloat(parts[0]);
+                    else if (parts[0] === 'left') x = 0;
+                    else if (parts[0] === 'right') x = 100;
+                    else if (parts[0] === 'center') x = 50;
+                }
+                
+                if (parts.length >= 2) {
+                    if (parts[1].includes('%')) y = parseFloat(parts[1]);
+                    else if (parts[1] === 'top') y = 0;
+                    else if (parts[1] === 'bottom') y = 100;
+                    else if (parts[1] === 'center') y = 50;
+                }
+                
+                return { x, y };
+            } catch (e) {
+                console.warn("⚠️ Erro ao ler posição:", e);
+                return { x: 50, y: 50 };
+            }
+        }
+
+        previewImage.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            console.log("🖱️ Mouse Down on Image");
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            const pos = getObjectPosition(previewImage);
+            startPosX = pos.x;
+            startPosY = pos.y;
+            console.log("🏁 Start Drag:", startPosX, startPosY);
+            
+            previewImage.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+            
+            // Increased sensitivity slightly
+            const sensitivity = 0.25;
+            
+            let newX = startPosX - (deltaX * sensitivity);
+            let newY = startPosY - (deltaY * sensitivity);
+            
+            newX = Math.max(0, Math.min(100, newX));
+            newY = Math.max(0, Math.min(100, newY));
+            
+            previewImage.style.objectPosition = `${newX}% ${newY}%`;
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                previewImage.style.cursor = 'move';
+            }
+        });
+        
+        // Touch support
+        previewImage.addEventListener('touchstart', (e) => {
+            // e.preventDefault(); // Might block scrolling, be careful
+            isDragging = true;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            
+            const pos = getObjectPosition(previewImage);
+            startPosX = pos.x;
+            startPosY = pos.y;
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            // Prevent scrolling while dragging image
+            if (e.cancelable) e.preventDefault();
+            
+            const deltaX = e.touches[0].clientX - startX;
+            const deltaY = e.touches[0].clientY - startY;
+            
+            const sensitivity = 0.3; // Higher sensitivity for touch
+            
+            let newX = startPosX - (deltaX * sensitivity);
+            let newY = startPosY - (deltaY * sensitivity);
+            
+            newX = Math.max(0, Math.min(100, newX));
+            newY = Math.max(0, Math.min(100, newY));
+            
+            previewImage.style.objectPosition = `${newX}% ${newY}%`;
+        }, { passive: false });
+
+        window.addEventListener('touchend', () => {
+             isDragging = false;
+        });
+    }
+
     // Init
+    initDragAndDrop();
     updateGradient();
     updatePattern();
     updateFont();
